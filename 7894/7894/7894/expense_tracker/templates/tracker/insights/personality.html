@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Spending Personality - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold">🎭 Spending Personality</h1>
+
+    {% if personality %}
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Personality Card -->
+            <div class="card">
+                <h3 class="text-xl font-bold mb-4">Your Profile</h3>
+                
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-blue-500 bg-opacity-20 mb-4">
+                        {% if personality.personality_type == 'planner' %}
+                            <span class="text-5xl">📋</span>
+                        {% elif personality.personality_type == 'impulse_spender' %}
+                            <span class="text-5xl">💳</span>
+                        {% elif personality.personality_type == 'minimalist' %}
+                            <span class="text-5xl">📦</span>
+                        {% else %}
+                            <span class="text-5xl">⚖️</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="text-3xl font-bold text-blue-400 mb-2">
+                        {{ personality.get_personality_type_display }}
+                    </h2>
+                </div>
+
+                <div class="space-y-4">
+                    {% if personality.personality_type == 'planner' %}
+                        <p class="text-slate-300">You are a <strong>Planner</strong>. You carefully manage your finances and stick to budgets. Your spending is consistent and well-planned.</p>
+                    {% elif personality.personality_type == 'impulse_spender' %}
+                        <p class="text-slate-300">You are an <strong>Impulse Spender</strong>. You tend to make spontaneous purchases and your spending varies significantly. Try to build awareness of triggers that lead to impulse buying.</p>
+                    {% elif personality.personality_type == 'minimalist' %}
+                        <p class="text-slate-300">You are a <strong>Minimalist</strong>. You keep your spending focused on essentials only. You have excellent financial discipline.</p>
+                    {% else %}
+                        <p class="text-slate-300">You are <strong>Balanced</strong>. You manage to balance savings and spending well. You maintain a healthy financial lifestyle.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="space-y-4">
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4">Metrics</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-slate-300 mb-2">Variance Score (Spending Consistency)</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ personality.variance_score }}%"></div>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">{{ personality.variance_score|floatformat:1 }}% - Higher means more variable spending</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-slate-300 mb-2">Category Diversity</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ personality.category_diversity }}%; background-color: #10b981;"></div>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">{{ personality.category_diversity|floatformat:1 }}% - How diverse your spending is</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-slate-300 mb-2">Weekend vs Weekday Ratio</p>
+                            <p class="text-xl font-bold">{{ personality.weekend_vs_weekday_ratio|floatformat:2 }}</p>
+                            <p class="text-sm text-slate-400">
+                                {% if personality.weekend_vs_weekday_ratio > 1 %}
+                                    You spend more on weekends
+                                {% elif personality.weekend_vs_weekday_ratio < 1 %}
+                                    You spend more on weekdays
+                                {% else %}
+                                    You spend equally on weekends and weekdays
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-slate-300 mb-2">Confidence Score</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ personality.confidence_score }}%; background-color: #f59e0b;"></div>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">{{ personality.confidence_score|floatformat:0 }}% - Based on data points analyzed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-3">💡 Tips</h3>
+                    <ul class="space-y-2 text-slate-300 text-sm">
+                        {% if personality.personality_type == 'planner' %}
+                            <li>• Keep up your excellent budgeting habits</li>
+                            <li>• Consider challenging yourself to save more</li>
+                            <li>• Your consistency is an asset - maintain it</li>
+                        {% elif personality.personality_type == 'impulse_spender' %}
+                            <li>• Set spending limits for high-risk categories</li>
+                            <li>• Use the "24-hour rule" before purchases</li>
+                            <li>• Track emotional triggers that lead to spending</li>
+                        {% elif personality.personality_type == 'minimalist' %}
+                            <li>• You're doing great with essential spending</li>
+                            <li>• Don't forget to budget for occasional treats</li>
+                            <li>• Balance is key - allow yourself some enjoyment</li>
+                        {% else %}
+                            <li>• You're maintaining a healthy balance</li>
+                            <li>• Continue monitoring your spending patterns</li>
+                            <li>• Look for small optimizations</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">Understanding Your Profile</h3>
+            <p class="text-slate-300">
+                Your spending personality is calculated based on your expense patterns over the last 3 months. 
+                It analyzes your variance in spending amounts, the diversity of your spending categories, 
+                and your spending patterns on weekends vs weekdays. As you continue to use the app, 
+                this analysis will become more accurate.
+            </p>
+        </div>
+    {% else %}
+        <div class="card">
+            <p class="text-slate-400 text-center py-8">
+                Not enough data yet. Add more expenses to get your personality analysis.
+            </p>
+            <div class="text-center mt-4">
+                <a href="{% url 'add_expense' %}" class="btn-primary">Add Your First Expense</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

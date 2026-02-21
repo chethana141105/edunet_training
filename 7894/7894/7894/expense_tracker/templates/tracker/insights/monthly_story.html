@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Story - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">📖 {{ month|date:"F Y" }} Story</h1>
+    </div>
+
+    {% if story %}
+        <!-- Main Narrative -->
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4">Your Month in Numbers</h2>
+            <p class="text-slate-300 text-lg leading-relaxed whitespace-pre-wrap">{{ story.narrative }}</p>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid md:grid-cols-4 gap-4">
+            <div class="card">
+                <p class="text-slate-300 mb-1">Total Spent</p>
+                <p class="text-2xl font-bold text-blue-400">{{ currency }} {{ story.total_spent }}</p>
+            </div>
+
+            <div class="card">
+                <p class="text-slate-300 mb-1">Top Category</p>
+                <p class="text-2xl font-bold">{{ story.top_category }}</p>
+                <p class="text-sm text-slate-400 mt-1">{{ currency }} {{ story.top_category_amount }}</p>
+            </div>
+
+            <div class="card">
+                <p class="text-slate-300 mb-1">Budget Status</p>
+                <p class="text-lg font-bold 
+                    {% if 'over' in story.budget_vs_actual %}
+                        text-red-400
+                    {% else %}
+                        text-green-400
+                    {% endif %}">
+                    {{ story.budget_vs_actual }}
+                </p>
+            </div>
+
+            <div class="card">
+                <p class="text-slate-300 mb-1">Mood Trend</p>
+                <p class="text-xl font-bold">{{ story.emotional_trend }}</p>
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        {% if story.key_insights %}
+            <div class="card">
+                <h3 class="text-xl font-bold mb-4">💡 Key Insights</h3>
+                <ul class="space-y-2">
+                    {% for insight in story.key_insights %}
+                        <li class="text-slate-300 flex items-start">
+                            <span class="text-blue-400 mr-2">•</span>
+                            <span>{{ insight }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Money Leak Alerts -->
+        {% if story.money_leak_alerts %}
+            <div class="card">
+                <h3 class="text-xl font-bold mb-4">🚨 Money Leak Alerts</h3>
+                <p class="text-slate-300 mb-4">
+                    We detected {{ story.money_leak_alerts|length }} money leak{{ story.money_leak_alerts|pluralize }} this month:
+                </p>
+                
+                <div class="space-y-3">
+                    {% for leak in story.money_leak_alerts %}
+                        <div class="p-3 bg-slate-800 rounded border-l-4 border-yellow-500">
+                            <p class="font-semibold text-slate-100">{{ leak.category }}</p>
+                            <p class="text-sm text-slate-400">
+                                <strong>{{ currency }} {{ leak.amount }}</strong> spent {{ leak.frequency|lower }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <a href="{% url 'money_leak_insights' %}" class="btn-primary mt-4">View Money Leak Details</a>
+            </div>
+        {% endif %}
+
+        <!-- Emotional Analysis -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">😊 Emotional Spending Analysis</h3>
+            <p class="text-slate-300 mb-4">{{ story.emotional_trend }}</p>
+            <p class="text-slate-400 text-sm">
+                By tracking moods with your expenses, you can identify patterns between your emotional state 
+                and spending behavior. This helps you make more conscious financial decisions.
+            </p>
+            
+            <a href="{% url 'mood_insights' %}" class="btn-primary mt-4">View Detailed Mood Analysis</a>
+        </div>
+
+        <!-- Reflection -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">🤔 Reflection Questions</h3>
+            <ul class="space-y-3 text-slate-300">
+                <li>
+                    <strong class="text-blue-400">Are you happy with your spending?</strong>
+                    <p class="text-sm text-slate-400 mt-1">Reflect on whether your expenses aligned with your values and goals.</p>
+                </li>
+                <li>
+                    <strong class="text-blue-400">Where can you improve?</strong>
+                    <p class="text-sm text-slate-400 mt-1">Look at money leaks and high-spending categories to find savings opportunities.</p>
+                </li>
+                <li>
+                    <strong class="text-blue-400">What's your action plan?</strong>
+                    <p class="text-sm text-slate-400 mt-1">Use insights to set goals for next month. Try the What-If Simulator to test strategies.</p>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="card bg-gradient-to-r from-blue-900 to-purple-900">
+            <h3 class="text-xl font-bold mb-3">📋 Next Steps</h3>
+            <ul class="space-y-2 text-slate-200">
+                <li>• Review your <a href="{% url 'personality_insights' %}" class="text-blue-300 hover:text-blue-200 underline">spending personality</a> profile</li>
+                <li>• Experiment with the <a href="{% url 'what_if_simulator' %}" class="text-blue-300 hover:text-blue-200 underline">What-If Simulator</a> to plan next month</li>
+                <li>• Set <a href="{% url 'budget_settings' %}" class="text-blue-300 hover:text-blue-200 underline">category budgets</a> for better control</li>
+                <li>• Continue logging expenses with moods for better insights</li>
+            </ul>
+        </div>
+    {% else %}
+        <div class="card">
+            <p class="text-slate-400 text-center py-12">
+                <span class="text-4xl mb-4 block">📝</span>
+                Not enough data yet. Add expenses throughout the month to generate your monthly story.
+            </p>
+            <div class="text-center mt-4">
+                <a href="{% url 'add_expense' %}" class="btn-primary">Start Adding Expenses</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

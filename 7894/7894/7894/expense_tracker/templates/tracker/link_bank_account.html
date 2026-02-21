@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div
+        class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 relative overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+
+        <!-- Decoration -->
+        <div class="absolute -top-12 -right-12 w-48 h-48 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
+
+        <h2
+            class="text-3xl font-extrabold text-gray-900 tracking-tight mb-8 text-center relative z-10 dark:text-gray-100">
+            Link Bank Account
+        </h2>
+
+        <form method="POST" action="{% url 'link_bank_account' %}" class="space-y-6 relative z-10">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Data Field 1 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bank Name</label>
+                    <select name="bank_name" required
+                        class="w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                        <option value="">Select Bank...</option>
+                        <option value="HDFC Bank">HDFC Bank</option>
+                        <option value="SBI">SBI</option>
+                        <option value="ICICI Bank">ICICI Bank</option>
+                        <option value="Axis Bank">Axis Bank</option>
+                        <option value="Chase">Chase</option>
+                        <option value="Bank of America">Bank of America</option>
+                    </select>
+                </div>
+
+                <!-- Data Field 2 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Type</label>
+                    <select name="account_type" required
+                        class="w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                        <option value="savings">Savings</option>
+                        <option value="current">Current</option>
+                        <option value="credit">Credit Card</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Currency -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</label>
+                <select name="currency"
+                    class="w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="INR" selected>INR (₹)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                </select>
+            </div>
+
+            <!-- Simulated Auth -->
+            <div
+                class="p-4 bg-yellow-50 rounded-lg text-sm text-yellow-700 border border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800">
+                <div class="flex items-center gap-2 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Secure Simulation
+                </div>
+                This is a simulation. No real bank connection will be made. Mock data will be generated for testing.
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+                <a href="{% url 'bank_accounts' %}"
+                    class="px-5 py-2.5 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors dark:text-gray-300 dark:hover:bg-gray-700">Cancel</a>
+                <button type="submit"
+                    class="px-6 py-2.5 rounded-lg bg-indigo-600 text-white font-medium shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Connect & Sync
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

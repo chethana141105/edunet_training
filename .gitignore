@@ -1,0 +1,45 @@
+# Django and Python
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables
+.env
+
+# Virtual environment (recursive)
+**/venv/
+**/env/
+**/ENV/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific debug/test scripts (recursive)
+**/add_debug.txt
+**/add_debug_2.txt
+**/check_hm.py
+**/check_users.py
+**/debug_8b.py
+**/debug_cat.py
+**/debug_output.txt
+**/debug_output_2.txt
+**/full_debug.py
+**/penny_debug.json
+**/penny_errors.log
+**/repro_add.py
+**/repro_bug.py
+**/test_categorize.py
+**/test_chat.py
+**/test_final.py
+**/test_groq.py
+**/test_retry.py
+**/test_utilities.py
+**/verify_fix.py
+**/error.log

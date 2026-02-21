@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Mood Analysis - Expense Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mood-emoji {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold">😊 Mood Analysis</h1>
+
+    {% if mood_data %}
+        <div class="grid md:grid-cols-3 gap-6 mb-6">
+            {% regroup mood_data by mood as mood_list %}
+            {% for mood_group in mood_list %}
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4">
+                        {% if mood_group.grouper == 'happy' %}
+                            😊 Happy Spending
+                        {% elif mood_group.grouper == 'stressed' %}
+                            😰 Stressed Spending
+                        {% else %}
+                            😐 Neutral Spending
+                        {% endif %}
+                    </h3>
+
+                    <div class="space-y-3">
+                        {% for analysis in mood_group.list %}
+                            {% if forloop.first %}
+                                <div>
+                                    <p class="text-slate-300 mb-1 text-sm">Total Spent ({{ mood_group.grouper }} mood)</p>
+                                    <p class="text-2xl font-bold text-blue-400">{{ currency }} {{ analysis.total_spent }}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-slate-300 mb-1 text-sm">Transactions</p>
+                                    <p class="text-xl font-bold">{{ analysis.frequency }}</p>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Mood-Category Breakdown -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">Spending by Mood & Category</h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-slate-600">
+                            <th class="text-left p-3 text-slate-300">Mood</th>
+                            <th class="text-left p-3 text-slate-300">Category</th>
+                            <th class="text-right p-3 text-slate-300">Total Spent</th>
+                            <th class="text-right p-3 text-slate-300">Frequency</th>
+                            <th class="text-right p-3 text-slate-300">Avg Per Transaction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for analysis in mood_data %}
+                            <tr class="border-b border-slate-700 hover:bg-slate-800">
+                                <td class="p-3">
+                                    {% if analysis.mood == 'happy' %}
+                                        😊 Happy
+                                    {% elif analysis.mood == 'stressed' %}
+                                        😰 Stressed
+                                    {% else %}
+                                        😐 Neutral
+                                    {% endif %}
+                                </td>
+                                <td class="p-3">
+                                    <span class="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-300 rounded text-sm">
+                                        {{ analysis.category }}
+                                    </span>
+                                </td>
+                                <td class="p-3 text-right font-semibold">{{ currency }} {{ analysis.total_spent }}</td>
+                                <td class="p-3 text-right">{{ analysis.frequency }}</td>
+                                <td class="p-3 text-right text-slate-400">
+                                    {{ currency }} {{ analysis.average_amount|floatformat:2 }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">💡 Key Insights</h3>
+            
+            <div class="space-y-3">
+                <p class="text-slate-300">
+                    Your mood tracking helps identify emotional spending patterns. This data shows which moods 
+                    correlate with higher spending amounts and in which categories.
+                </p>
+
+                {% regroup mood_data by mood as insights %}
+                {% for mood_group in insights %}
+                    {% if mood_group.list|length > 0 %}
+                        <div>
+                            <p class="text-slate-300 font-semibold">
+                                {% if mood_group.grouper == 'happy' %}
+                                    When Happy:
+                                {% elif mood_group.grouper == 'stressed' %}
+                                    When Stressed:
+                                {% else %}
+                                    When Neutral:
+                                {% endif %}
+                            </p>
+                            <ul class="list-disc list-inside text-slate-400 text-sm ml-2">
+                                {% for analysis in mood_group.list %}
+                                    <li>You spend the most on {{ analysis.category }} ({{ analysis.frequency }} transactions, avg {{ currency }} {{ analysis.average_amount|floatformat:2 }} each)</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <p class="text-slate-400 text-center py-8">
+                No mood data yet. Start logging expenses with mood tags to see insights.
+            </p>
+            <div class="text-center mt-4">
+                <a href="{% url 'add_expense' %}" class="btn-primary">Add Expense with Mood</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

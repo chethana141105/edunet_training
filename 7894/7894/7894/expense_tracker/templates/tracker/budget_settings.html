@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Budget Settings - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="card mb-6">
+        <h2 class="text-2xl font-bold mb-6">💼 Budget Settings</h2>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_monthly_budget">Monthly Budget</label>
+                {{ form.monthly_budget }}
+                <p class="text-slate-400 text-sm mt-2">Set your target monthly budget amount</p>
+                {% if form.monthly_budget.errors %}
+                    <p class="text-red-400 text-sm mt-1">{{ form.monthly_budget.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_currency">Currency</label>
+                {{ form.currency }}
+                <p class="text-slate-400 text-sm mt-2">Select your preferred currency for the application</p>
+                {% if form.currency.errors %}
+                    <p class="text-red-400 text-sm mt-1">{{ form.currency.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_leak_threshold">Money Leak Threshold</label>
+                {{ form.leak_threshold }}
+                <p class="text-slate-400 text-sm mt-2">Transactions below this amount will be tracked as potential money leaks.</p>
+                {% if form.leak_threshold.errors %}
+                    <p class="text-red-400 text-sm mt-1">{{ form.leak_threshold.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex gap-4">
+                <button type="submit" class="btn-primary px-8 py-2 font-medium">
+                    Save Budget
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn-secondary px-8 py-2 font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Budget Overview -->
+    {% if budget %}
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">Budget Overview</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-slate-300 mb-2">Current Monthly Budget</p>
+                    <p class="text-3xl font-bold text-blue-400">{{ budget.currency }} {{ budget.monthly_budget }}</p>
+                </div>
+                <p class="text-slate-400">Your budget settings are applied to track spending against your goals. You can update your budget anytime.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

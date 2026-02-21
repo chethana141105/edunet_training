@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Money Leak Detector - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold">🚨 Money Leak Detector</h1>
+
+    {% if leaks %}
+        <div class="alert alert-warning">
+            We detected {{ leaks|length }} money leak{{ leaks|length|pluralize }} this month. These are small but frequent expenses that add up quickly.
+        </div>
+
+        <div class="space-y-4">
+            {% for leak in leaks %}
+                <div class="card border-l-4" style="border-left-color: 
+                    {% if leak.severity == 'high' %}
+                        #ef4444
+                    {% elif leak.severity == 'medium' %}
+                        #f59e0b
+                    {% else %}
+                        #10b981
+                    {% endif %};">
+                    
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-xl font-bold">{{ leak.category }}</h3>
+                            <p class="text-slate-400 text-sm">{{ leak.frequency_description }}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded font-semibold
+                            {% if leak.severity == 'high' %}
+                                bg-red-500 bg-opacity-20 text-red-400
+                            {% elif leak.severity == 'medium' %}
+                                bg-yellow-500 bg-opacity-20 text-yellow-400
+                            {% else %}
+                                bg-green-500 bg-opacity-20 text-green-400
+                            {% endif %}">
+                            {{ leak.get_severity_display }} Severity
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mb-4 p-3 bg-slate-800 rounded">
+                        <div>
+                            <p class="text-slate-400 text-sm">Monthly Total</p>
+                            <p class="text-2xl font-bold">{{ currency }} {{ leak.monthly_total }}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Number of Transactions</p>
+                            <p class="text-2xl font-bold">{{ leak.transaction_count }}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Avg Per Transaction</p>
+                            <p class="text-2xl font-bold">{{ currency }} {{ leak.average_transaction }}</p>
+                        </div>
+                    </div>
+
+                    <p class="text-slate-300 text-sm mb-4">
+                        You're spending <strong>{{ currency }} {{ leak.monthly_total }}</strong> on {{ leak.category|lower }} 
+                        through {{ leak.frequency_description|lower }}. This money could be redirected to savings or other goals.
+                    </p>
+
+                    <!-- Transaction Details -->
+                    <div class="bg-slate-900 rounded p-3">
+                        <p class="text-xs text-slate-400 font-bold mb-2 uppercase">Detected Transactions:</p>
+                        <ul class="space-y-1 text-sm text-slate-300 max-h-32 overflow-y-auto">
+                            {% for tx in leak.transactions %}
+                                <li class="flex justify-between border-b border-slate-700 pb-1 last:border-0">
+                                    <span>{{ tx.date|date:"M d" }} - {{ tx.description|default:"No description"|truncatechars:20 }}</span>
+                                    <span>{{ tx.currency }} {{ tx.amount }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Summary -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">💡 How to Fix Money Leaks</h3>
+            
+            <div class="space-y-3 text-slate-300">
+                <div>
+                    <p class="font-semibold mb-1">1. Track Consciously</p>
+                    <p class="text-sm">Be aware of these small transactions. Sometimes just becoming conscious of them reduces spending.</p>
+                </div>
+                
+                <div>
+                    <p class="font-semibold mb-1">2. Set Category Limits</p>
+                    <p class="text-sm">Use category budgets to cap spending in leak-prone categories.</p>
+                </div>
+                
+                <div>
+                    <p class="font-semibold mb-1">3. Use the What-If Simulator</p>
+                    <p class="text-sm">See how much you could save by reducing spending in these categories.</p>
+                </div>
+                
+                <div>
+                    <p class="font-semibold mb-1">4. Find Alternatives</p>
+                    <p class="text-sm">Look for cheaper alternatives or bulk purchasing options for frequently bought items.</p>
+                </div>
+            </div>
+
+            <a href="{% url 'what_if_simulator' %}" class="btn-primary mt-4">Try the What-If Simulator</a>
+        </div>
+    {% else %}
+        <div class="card">
+            <p class="text-slate-400 text-center py-12">
+                <span class="text-4xl mb-4 block">✨</span>
+                No money leaks detected! You're doing great with your spending.
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Info Card -->
+    <div class="card">
+        <h3 class="text-lg font-bold mb-3">What are Money Leaks?</h3>
+        <p class="text-slate-300">
+            Money leaks are small, frequent expenses that don't seem significant individually but add up to substantial amounts. 
+            For example, buying coffee every day ($5 × 30 days = $150/month) or impulse purchases at convenience stores. 
+            Our detector identifies categories where you have transactions below your set leak threshold. Even a single small transaction is flagged so you can stay aware of potential leaks.
+        </p>
+    </div>
+</div>
+{% endblock %}

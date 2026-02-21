@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-6">{{ title }}</h2>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="form-group col-span-2 md:col-span-1">
+                    <label for="id_currency">Currency *</label>
+                    {{ form.currency }}
+                    {% if form.currency.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.currency.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group col-span-2 md:col-span-1">
+                    <label for="id_amount">Amount *</label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.amount.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group col-span-2 md:col-span-1">
+                    <label for="id_date">Date *</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group col-span-2 md:col-span-1">
+                    <label for="id_category">Category *</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group col-span-2 md:col-span-1">
+                    <label for="id_mood">Mood *</label>
+                    {{ form.mood }}
+                    {% if form.mood.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.mood.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_description">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex gap-4">
+                <button type="submit" class="btn-primary px-8 py-2 font-medium">
+                    {% if expense %}Update{% else %}Add{% endif %} Expense
+                </button>
+                <a href="{% url 'expense_list' %}" class="btn-secondary px-8 py-2 font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

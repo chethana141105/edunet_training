@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}What-If Simulator - Expense Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .slider-container input[type="range"] {
+        width: 100%;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: linear-gradient(to right, #1e293b 0%, #1e293b 100%);
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    .slider-container input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        background: #3b82f6;
+        cursor: pointer;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .slider-container input[type="range"]::-moz-range-thumb {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        background: #3b82f6;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .slider-value {
+        min-width: 40px;
+        text-align: right;
+        font-weight: bold;
+        color: #3b82f6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold">🎲 What-If Spending Simulator</h1>
+
+    <div class="alert alert-info">
+        Use the sliders below to simulate different spending scenarios. See how much you could save by 
+        adjusting spending in each category.
+    </div>
+
+    {% if expenses_by_category %}
+        <div class="grid md:grid-cols-3 gap-6 mb-6">
+            <div class="card">
+                <p class="text-slate-300 mb-1">Current Monthly Total</p>
+                <p class="text-3xl font-bold text-blue-400" id="originalTotal">
+                    {{ currency }} {% for exp in expenses_by_category %}{{ exp.total|add:"0" }}{% if not forloop.last %}{% endif %}{% endfor %}
+                </p>
+            </div>
+
+            <div class="card">
+                <p class="text-slate-300 mb-1">Simulated Total</p>
+                <p class="text-3xl font-bold" id="simulatedTotal">{{ currency }} 0.00</p>
+            </div>
+
+            <div class="card">
+                <p class="text-slate-300 mb-1">Potential Savings</p>
+                <p class="text-3xl font-bold text-green-400" id="savingsTotal">{{ currency }} 0.00</p>
+                <p class="text-sm text-slate-400 mt-1" id="savingsPercent">0%</p>
+            </div>
+        </div>
+
+        <!-- Category Sliders -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-6">Adjust Category Spending</h3>
+            
+            <form id="simulatorForm" class="space-y-6">
+                {% for category_expense in expenses_by_category %}
+                    <div class="p-4 bg-slate-800 rounded">
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="font-bold">{{ category_expense.category }}</p>
+                            <p class="text-slate-300">{{ currency }} {{ category_expense.total|floatformat:2 }}</p>
+                        </div>
+
+                        <div class="slider-container">
+                            <span class="text-slate-400 text-sm">-100%</span>
+                            <input 
+                                type="range" 
+                                name="adjustment_{{ category_expense.category }}"
+                                min="-100" 
+                                max="100" 
+                                value="0"
+                                class="category-slider"
+                                data-category="{{ category_expense.category }}"
+                                data-original="{{ category_expense.total }}">
+                            <span class="text-slate-400 text-sm">+100%</span>
+                            <span class="slider-value" data-category="{{ category_expense.category }}-value">0%</span>
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-2">
+                            Simulated: <span class="simulated-amount" data-category="{{ category_expense.category }}">{{ category_expense.total }}</span>
+                        </p>
+                    </div>
+                {% endfor %}
+            </form>
+        </div>
+
+        <!-- Presets -->
+        <div class="card">
+            <h3 class="text-lg font-bold mb-4">⚡ Quick Presets</h3>
+            
+            <div class="grid md:grid-cols-3 gap-3">
+                <button class="btn-primary" onclick="applyPreset(10)">
+                    Reduce All by 10%
+                </button>
+                <button class="btn-primary" onclick="applyPreset(25)">
+                    Reduce All by 25%
+                </button>
+                <button class="btn-primary" onclick="applyPreset(50)">
+                    Reduce All by 50%
+                </button>
+            </div>
+
+            <button class="btn-secondary mt-3 w-full" onclick="resetSimulator()">
+                Reset All
+            </button>
+        </div>
+
+        <!-- Insights -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">💡 Insights</h3>
+            
+            <div class="space-y-3">
+                <p class="text-slate-300">
+                    Your highest spending categories:
+                </p>
+                
+                <ol class="space-y-2 text-slate-300">
+                    {% for category_expense in expenses_by_category|slice:":3" %}
+                        <li class="flex justify-between items-center">
+                            <span>{{ forloop.counter }}. {{ category_expense.category }}</span>
+                            <span class="font-bold">{{ currency }} {{ category_expense.total|floatformat:2 }}</span>
+                        </li>
+                    {% endfor %}
+                </ol>
+
+                <p class="text-slate-400 text-sm mt-4">
+                    Focus on reducing spending in your top categories for maximum impact on your savings.
+                </p>
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <p class="text-slate-400 text-center py-12">
+                <span class="text-4xl mb-4 block">🎲</span>
+                No expenses this month yet. Add some to use the simulator.
+            </p>
+            <div class="text-center mt-4">
+                <a href="{% url 'add_expense' %}" class="btn-primary">Add Expense</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    const categoryExpenses = {
+        {% for exp in expenses_by_category %}
+            '{{ exp.category }}': {{ exp.total }},
+        {% endfor %}
+    };
+
+    const currencySymbol = '{{ currency }}';
+
+    function updateSimulation() {
+        let totalOriginal = 0;
+        let totalSimulated = 0;
+
+        for (const [category, amount] of Object.entries(categoryExpenses)) {
+            totalOriginal += parseFloat(amount);
+            
+            const sliderElement = document.querySelector(`input[data-category="${category}"]`);
+            if (sliderElement) {
+                const adjustment = parseInt(sliderElement.value);
+                const simulatedAmount = parseFloat(amount) * (1 - adjustment / 100);
+                totalSimulated += simulatedAmount;
+
+                // Update value display
+                document.querySelector(`[data-category="${category}-value"]`).textContent = adjustment + '%';
+                
+                // Update simulated amount display
+                document.querySelector(`[data-category="${category}"]`).textContent = currencySymbol + ' ' + simulatedAmount.toFixed(2);
+            }
+        }
+
+        const savings = totalOriginal - totalSimulated;
+        const savingsPercent = totalOriginal > 0 ? (savings / totalOriginal * 100).toFixed(1) : 0;
+
+        document.getElementById('originalTotal').textContent = currencySymbol + ' ' + totalOriginal.toFixed(2);
+        document.getElementById('simulatedTotal').textContent = currencySymbol + ' ' + totalSimulated.toFixed(2);
+        document.getElementById('savingsTotal').textContent = currencySymbol + ' ' + savings.toFixed(2);
+        document.getElementById('savingsPercent').textContent = savingsPercent + '% savings';
+    }
+
+    function applyPreset(percentage) {
+        document.querySelectorAll('.category-slider').forEach(slider => {
+            slider.value = -percentage;
+        });
+        updateSimulation();
+    }
+
+    function resetSimulator() {
+        document.querySelectorAll('.category-slider').forEach(slider => {
+            slider.value = 0;
+        });
+        updateSimulation();
+    }
+
+    // Initialize
+    document.querySelectorAll('.category-slider').forEach(slider => {
+        slider.addEventListener('input', updateSimulation);
+    });
+
+    updateSimulation();
+</script>
+{% endblock %}

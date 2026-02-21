@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">📊 Dashboard</h1>
+        <span class="text-slate-400">{{ month|date:"F Y" }}</span>
+    </div>
+
+    <!-- Key Stats -->
+    <div class="stat-grid">
+        <div class="card">
+            <div class="stat-label">Total Spent</div>
+            <div class="stat-value">{{ currency }} {{ total_spent }}</div>
+            <div class="text-sm text-slate-400 mt-2">This month</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Monthly Budget</div>
+            <div class="stat-value">{{ currency }} {{ budget }}</div>
+            <div class="text-sm text-slate-400 mt-2">
+                {% if remaining_budget > 0 %}
+                    <span class="text-green-400">{{ currency }} {{ remaining_budget }} remaining</span>
+                {% else %}
+                    <span class="text-red-400">{{ currency }} {{ remaining_budget|floatformat:"-2" }} over</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Budget Progress</div>
+            <div class="stat-value">{{ budget_percentage|floatformat:0 }}%</div>
+            <div class="progress-bar mt-2">
+                <div class="progress-fill" style="width: {{ budget_percentage|floatformat:0 }}%"></div>
+            </div>
+        </div>
+
+        {% if personality %}
+            <div class="card">
+                <div class="stat-label">Spending Personality</div>
+                <div class="text-xl font-bold text-blue-400">🎭 {{ personality.get_personality_type_display }}</div>
+                <div class="text-xs text-slate-400 mt-2">
+                    {{ personality.confidence_score|floatformat:0 }}% confident
+                </div>
+            </div>
+        {% endif %}
+
+        {% if burn_rate %}
+            <div class="card">
+                <div class="stat-label">Projected Total</div>
+                <div class="stat-value">{{ currency }} {{ burn_rate.projected_month_total|floatformat:2 }}</div>
+                <div class="text-sm mt-2">
+                    {% if burn_rate.will_overspend %}
+                        <span class="text-red-400">⚠️ Will overspend by {{ burn_rate.overspend_percentage|floatformat:1 }}%</span>
+                    {% else %}
+                        <span class="text-green-400">✓ Will save {{ burn_rate.savings_percentage|floatformat:1 }}%</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Charts -->
+    <div class="grid md:grid-cols-2 gap-6">
+        <!-- Category Breakdown -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">Category Breakdown</h3>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Daily Spending Trend -->
+        <div class="card">
+            <h3 class="text-xl font-bold mb-4">Daily Spending Trend</h3>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Expenses -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-xl font-bold">Recent Expenses</h3>
+            <a href="{% url 'expense_list' %}" class="text-blue-400 hover:text-blue-300">View All →</a>
+        </div>
+
+        {% if recent_expenses %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-slate-600">
+                            <th class="text-left p-3 text-slate-300 text-sm">Date</th>
+                            <th class="text-left p-3 text-slate-300 text-sm">Category</th>
+                            <th class="text-left p-3 text-slate-300 text-sm">Amount</th>
+                            <th class="text-left p-3 text-slate-300 text-sm">Mood</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in recent_expenses %}
+                            <tr class="border-b border-slate-700 hover:bg-slate-800">
+                                <td class="p-3 text-slate-300 text-sm">{{ expense.date }}</td>
+                                <td class="p-3">
+                                    <span class="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-300 rounded text-xs">
+                                        {{ expense.category }}
+                                    </span>
+                                </td>
+                                <td class="p-3 font-semibold">{{ expense.currency }} {{ expense.amount }}</td>
+                                <td class="p-3 text-sm">
+                                    {% if expense.mood == 'happy' %}
+                                        😊
+                                    {% elif expense.mood == 'stressed' %}
+                                        😰
+                                    {% else %}
+                                        😐
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-slate-400 text-center py-8">No expenses yet. <a href="{% url 'add_expense' %}" class="text-blue-400">Add one</a>.</p>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid md:grid-cols-2 gap-6">
+        <a href="{% url 'add_expense' %}" class="card hover:border-blue-400 transition cursor-pointer">
+            <h3 class="text-lg font-bold text-blue-400">➕ Add Expense</h3>
+            <p class="text-slate-400">Quickly log a new expense</p>
+        </a>
+
+        <a href="{% url 'budget_settings' %}" class="card hover:border-blue-400 transition cursor-pointer">
+            <h3 class="text-lg font-bold text-blue-400">💼 Budget Settings</h3>
+            <p class="text-slate-400">Adjust your monthly budget</p>
+        </a>
+
+        <a href="{% url 'personality_insights' %}" class="card hover:border-blue-400 transition cursor-pointer">
+            <h3 class="text-lg font-bold text-blue-400">🎭 Personality Analysis</h3>
+            <p class="text-slate-400">Discover your spending profile</p>
+        </a>
+
+        <a href="{% url 'what_if_simulator' %}" class="card hover:border-blue-400 transition cursor-pointer">
+            <h3 class="text-lg font-bold text-blue-400">🎲 What-If Simulator</h3>
+            <p class="text-slate-400">Experiment with spending</p>
+        </a>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Category Pie Chart
+    const categoryCanvas = document.getElementById('categoryChart');
+    if (categoryCanvas) {
+        const categoryCtx = categoryCanvas.getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for item in category_breakdown %}
+                        '{{ item.category|escapejs }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for item in category_breakdown %}
+                            {{ item.total|stringformat:"f" }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+                        '#06b6d4', '#f97316', '#6366f1', '#84cc16', '#14b8a6'
+                    ],
+                    borderColor: '#1e293b',
+                    borderWidth: 2,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { size: 12 },
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const totalSpent = parseFloat('{{ total_spent|stringformat:"f" }}') || 1;
+                                return '{{ currency|escapejs }} ' + context.parsed + ' (' + (context.parsed / totalSpent * 100).toFixed(1) + '%)';
+                            }
+                        }
+                    }
+                },
+            },
+        });
+    }
+
+    // Daily Trend Line Chart
+    const trendCanvas = document.getElementById('trendChart');
+    if (trendCanvas) {
+        fetch('{% url "expense_data_api" %}?period=month')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.expenses || data.expenses.length === 0) {
+                    console.log('No expense data for trend chart');
+                    return;
+                }
+                
+                const trendCtx = trendCanvas.getContext('2d');
+                const trendChart = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.expenses.map(e => {
+                            // Format date for better display
+                            const date = new Date(e.date);
+                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        }),
+                        datasets: [{
+                            label: 'Daily Spending ({{ currency|escapejs }})',
+                            data: data.expenses.map(e => parseFloat(e.total)),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#1e293b',
+                            pointHoverRadius: 6,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { 
+                                    color: '#cbd5e1',
+                                    callback: function(value) {
+                                        return '{{ currency|escapejs }}' + value;
+                                    }
+                                },
+                                grid: { color: '#475569' },
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#475569' },
+                            }
+                        }
+                    },
+                });
+            })
+            .catch(err => console.error('Error fetching trend data:', err));
+    }
+</script>
+{% endblock %}

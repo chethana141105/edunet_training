@@ -1,0 +1,185 @@
+{% extends "base.html" %} {% block title %}Burn Rate Prediction - Expense
+Tracker{% endblock %} {% block extra_css %}
+<style>
+  .gauge-container {
+    position: relative;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gauge-text {
+    text-align: center;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold">🔥 Burn Rate Prediction</h1>
+
+  {% if prediction %}
+  <div class="grid md:grid-cols-2 gap-6">
+    <!-- Main Prediction -->
+    <div class="card">
+      <h3 class="text-xl font-bold mb-6">This Month's Projection</h3>
+
+      {% if prediction.will_overspend %}
+      <div class="alert alert-danger mb-4">
+        ⚠️ You're on track to overspend by <strong>{{ currency }} {{ overspend_amount|floatformat:2 }}</strong> 
+        ({{ prediction.overspend_percentage|floatformat:1 }}%)
+      </div>
+      {% else %}
+      <div class="alert alert-success mb-4">
+        ✓ You're on track to save <strong>{{ currency }} {{ savings_amount|floatformat:2 }}</strong> 
+        ({{ prediction.savings_percentage|floatformat:1 }}% of your budget)
+      </div>
+      {% endif %}
+
+      <div class="space-y-4">
+        <div>
+          <p class="text-slate-300 mb-2">Daily Average Spend</p>
+          <p class="text-3xl font-bold text-blue-400">
+            {{ currency }} {{ prediction.daily_average_spend|floatformat:2 }}
+          </p>
+        </div>
+
+        <div>
+          <p class="text-slate-300 mb-2">Budget</p>
+          <p class="text-lg">{{ currency }} {{ prediction.budget_amount }}</p>
+        </div>
+
+        <div>
+          <p class="text-slate-300 mb-2">Projected Month Total</p>
+          <p
+            class="text-3xl font-bold {% if prediction.will_overspend %} text-red-400 {% else %} text-green-400 {% endif %}"
+          >
+            {{ currency }} {{ prediction.projected_month_total|floatformat:2 }}
+          </p>
+        </div>
+
+        {% if prediction.estimated_exhaustion_date %}
+        <div class="alert alert-warning">
+          If you maintain this daily spending rate, you'll exhaust your budget
+          by
+          <strong>{{ prediction.estimated_exhaustion_date }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="space-y-4">
+      <div class="card">
+        <h3 class="text-lg font-bold mb-4">Budget Status</h3>
+
+        <div class="space-y-3">
+          <div>
+            <p class="text-slate-300 mb-2">Progress</p>
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                style="width: min(100, {{ burn_percentage }})%; 
+                                    background-color: {% if prediction.will_overspend %}#ef4444{% else %}#10b981{% endif %};"
+              ></div>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              {{ prediction.projected_month_total|floatformat:2 }} / {{
+              prediction.budget_amount }} ({{ burn_percentage_rounded }}%)
+            </p>
+          </div>
+
+          {% if prediction.will_overspend %}
+          <div class="alert alert-danger">
+            <strong>Overspend Amount:</strong>
+            {{ currency }} {{ overspend_amount|floatformat:2 }}
+          </div>
+          {% else %}
+          <div class="alert alert-success">
+            <strong>Savings:</strong>
+            {{ currency }} {{ savings_amount|floatformat:2 }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="text-lg font-bold mb-3">📋 Summary</h3>
+        <ul class="space-y-2 text-slate-300 text-sm">
+          <li>• Days into month: Based on current spending</li>
+          <li>
+            • Daily burn rate: {{ currency }} {{ prediction.daily_average_spend|floatformat:2
+            }} per day
+          </li>
+          {% if prediction.will_overspend %}
+          <li>• Status: ⚠️ Need to reduce spending</li>
+          {% else %}
+          <li>• Status: ✓ On track with budget</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="card">
+    <h3 class="text-xl font-bold mb-4">💡 Recommendations</h3>
+
+    {% if prediction.will_overspend %}
+    <div class="space-y-3">
+      <p class="text-slate-300">To stay within budget, consider:</p>
+      <ul class="space-y-2 text-slate-300">
+        <li>
+          • <strong>Reduce daily spending</strong> by {{ currency }} {{ suggested_reduction|floatformat:2 }}
+          per day for the remaining {{ days_remaining }} days
+        </li>
+        <li>
+          • Use the <strong>What-If Simulator</strong> to see impact of cutting
+          specific categories
+        </li>
+        <li>• Review high-spending categories and find areas to cut</li>
+        <li>• Set up <strong>Category Budgets</strong> for better control</li>
+      </ul>
+
+      <a
+        href="{% url 'what_if_simulator' %}"
+        class="btn-primary inline-block mt-4"
+        >Try What-If Simulator</a
+      >
+    </div>
+    {% else %}
+    <div class="space-y-3">
+      <p class="text-slate-300">
+        Great job! You're on track to stay within budget. Consider:
+      </p>
+      <ul class="space-y-2 text-slate-300">
+        <li>• Continue monitoring your spending patterns</li>
+        <li>• Set aside the projected savings for an emergency fund</li>
+        <li>• Challenge yourself to save even more this month</li>
+        <li>• Review money leaks and find additional savings opportunities</li>
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- How It Works -->
+  <div class="card">
+    <h3 class="text-lg font-bold mb-3">How We Calculate This</h3>
+    <p class="text-slate-300 text-sm">
+      We analyze your spending so far this month and calculate your daily
+      average. This is then multiplied by the total days in the month to project
+      your end-of-month total. The projection becomes more accurate as the month
+      progresses and we have more data points.
+    </p>
+  </div>
+  {% else %}
+  <div class="card">
+    <p class="text-slate-400 text-center py-8">
+      Not enough data yet. Add a few expenses to see your burn rate prediction.
+    </p>
+    <div class="text-center mt-4">
+      <a href="{% url 'add_expense' %}" class="btn-primary">Add Expenses</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
